@@ -26,6 +26,9 @@ jobs:
   generate-and-send-report:
     name: KB Report generieren & versenden
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # für git push (last_processed_kb.txt)
+      models: read     # für GitHub Models API (gpt-4o)
 
     steps:
       # ── 1. Repository auschecken ─────────────────────────────────────────
