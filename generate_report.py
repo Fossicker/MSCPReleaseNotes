@@ -210,9 +210,8 @@ def send_email(filename: str, data: dict, is_new: bool):
     part.add_header("Content-Disposition", f'attachment; filename="{filename}"')
     msg.attach(part)
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as srv:
+    with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as srv:
         srv.ehlo()
-        srv.starttls()
         srv.login(SMTP_USER, SMTP_PASSWORD)
         srv.sendmail(EMAIL_FROM, recipients, msg.as_string())
 
