@@ -1,12 +1,11 @@
 name: Windows KB – Täglicher Release Report
 
 on:
-  # ── Zeitgesteuerter Lauf (Cron) ──────────────────────────────────────────
-  # Format: 'Minute Stunde Tag Monat Wochentag' (immer UTC!)
-  # Beispiele:
-  #   '0 6 * * *'     → täglich 06:00 UTC = 07:00 MEZ / 08:00 MESZ
-  #   '30 5 * * 1-5'  → Mo–Fr um 05:30 UTC (kein Wochenende)
-  #   '0 7 * * *'     → täglich 07:00 UTC = 08:00 MEZ / 09:00 MESZ
+  # ── Täglich zur gewünschten Uhrzeit (immer UTC!) ─────────────────────────
+  # 06:00 UTC = 07:00 MEZ (Winter) / 08:00 MESZ (Sommer)
+  # Weitere Beispiele:
+  #   '0 5 * * *'     → 06:00 MEZ
+  #   '30 5 * * 1-5'  → Mo–Fr 06:30 MEZ (kein Wochenende)
   schedule:
     - cron: '0 6 * * *'
 
@@ -26,16 +25,17 @@ jobs:
   generate-and-send-report:
     name: KB Report generieren & versenden
     runs-on: ubuntu-latest
+
+    # Berechtigung für GitHub Models API (GITHUB_TOKEN) und Repo-Push
     permissions:
-      contents: write  # für git push (last_processed_kb.txt)
-      models: read     # für GitHub Models API (gpt-4o)
+      contents: write
+      models: read              # Zugriff auf GitHub Models / Copilot API
 
     steps:
       # ── 1. Repository auschecken ─────────────────────────────────────────
       - name: Repository auschecken
         uses: actions/checkout@v4
         with:
-          # Token mit Schreibrechten damit last_processed_kb.txt committed werden kann
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # ── 2. Python einrichten ──────────────────────────────────────────────
@@ -52,23 +52,24 @@ jobs:
       # ── 4. Report generieren und per Mail senden ─────────────────────────
       - name: Report generieren & E-Mail senden
         env:
-          GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SMTP_SERVER:       ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT:         ${{ secrets.SMTP_PORT }}
-          SMTP_USER:         ${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD:     ${{ secrets.SMTP_PASSWORD }}
-          EMAIL_TO:          ${{ secrets.EMAIL_TO }}
-          EMAIL_FROM:        ${{ secrets.EMAIL_FROM }}
-          # Bei manuellem Auslösen: force_send-Eingabe übernehmen
-          FORCE_SEND:        ${{ github.event.inputs.force_send || 'false' }}
+          # GitHub Copilot / Models API – automatisch verfügbar, kein Secret nötig!
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SMTP-Konfiguration aus Repository-Secrets
+          SMTP_SERVER:  ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT:    ${{ secrets.SMTP_PORT }}
+          SMTP_USER:    ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO:     ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM:   ${{ secrets.EMAIL_FROM }}
+          # Manueller Auslöser: force_send-Eingabe übernehmen
+          FORCE_SEND:   ${{ github.event.inputs.force_send || 'false' }}
         run: python generate_report.py
 
       # ── 5. Letzte KB-Nummer zurück ins Repository committen ──────────────
-      - name: Letzte KB-Nummer speichern (Commit)
+      - name: Letzte KB-Nummer speichern
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add last_processed_kb.txt
-          git diff --staged --quiet || git commit -m "chore: letzte verarbeitete KB aktualisiert [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: letzte KB aktualisiert [skip ci]"
           git push
