@@ -1,4 +1,4 @@
-name: Daily summary
+name: StartCopilot
 on:
   workflow_dispatch:
   # Run this workflow daily at 5:30pm UTC
