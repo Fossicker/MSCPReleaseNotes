@@ -13,17 +13,15 @@ const transporter = nodemailer.createTransport({
 });
 
 (async () => {
-  // Neon API logic ran here, returning values to include in the body of the email.
-  let branch_id = 'little-salad-123';
-  let days = 3;
-  let email = 'davidgoldmann2@gmail.com';
+  const copilotResponse = process.env.COPILOT_RESPONSE || '(keine Antwort erhalten)';
+  const email = 'davidgoldmann2@gmail.com';
 
   try {
     await transporter.sendMail({
-      from: '"Warning | DevOps" <davidgoldmann2@gmail.com>',
+      from: '"Daily Summary | Copilot" <davidgoldmann2@gmail.com>',
       to: email,
-      subject: 'Stale Branch Detected!',
-      html: `Branch: <b>${branch_id}</b> will be deleted in <b>${days}</b> days`,
+      subject: 'Daily Copilot Summary',
+      html: `<pre>${copilotResponse}</pre>`,
     });
   } catch (error) {
     console.error(error);
