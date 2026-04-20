@@ -1,22 +1,34 @@
-name: StartCopilot
+name: Daily Summary
+
 on:
   workflow_dispatch:
   # Run this workflow daily at 5:30pm UTC
   schedule:
     - cron: '30 17 * * *'
+
 permissions:
   contents: read
+
+env:
+  GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+
 jobs:
   daily-summary:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
@@ -25,4 +37,10 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          copilot -p "wie ist das wetter in berlin?"
+          COPILOT_RESPONSE=$(copilot -p "wie ist das wetter in berlin?")
+          echo "COPILOT_RESPONSE<<EOF" >> $GITHUB_ENV
+          echo "$COPILOT_RESPONSE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Email
+        run: node .github/scripts/send-email.mjs
