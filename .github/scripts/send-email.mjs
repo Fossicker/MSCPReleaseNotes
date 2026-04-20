@@ -31,7 +31,7 @@ const transporter = nodemailer.createTransport({
       from: '"Daily Summary | Copilot" <davidgoldmann2@gmail.com>',
       to: email,
       subject: 'Daily Copilot Summary – Releasenotes',
-      html: `<p>Die generierten Releasenotes sind als CSV-Datei angehängt.</p><pre>${copilotResponse}</pre>`,
+      html: `<p>Die generierten Releasenotes sind als CSV-Datei angehängt.</p>`,
       attachments,
     });
   } catch (error) {
