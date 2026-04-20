@@ -1,0 +1,24 @@
+{
+  "name": "mscpreleasenotes",
+  "version": "1.0.0",
+  "description": "Generiert täglich automatisch eine Excel-Datei mit den neuesten Windows 11 Release Notes (24H2/25H2) per **GitHub Copilot** und verschickt sie per E-Mail.",
+  "homepage": "https://github.com/Fossicker/MSCPReleaseNotes#readme",
+  "bugs": {
+    "url": "https://github.com/Fossicker/MSCPReleaseNotes/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fossicker/MSCPReleaseNotes.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "nodemailer": "^8.0.5"
+  }
+}
