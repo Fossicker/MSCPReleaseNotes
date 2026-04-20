@@ -23,6 +23,6 @@ jobs:
 
       - name: Run Copilot CLI
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           copilot -p "wie ist das wetter in berlin?"
