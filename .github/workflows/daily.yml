@@ -41,19 +41,16 @@ jobs:
             --max-time 30 \
             "https://support.microsoft.com/de-de/topic/26-m%C3%A4rz-2026-kb5079391-betriebssystembuilds-26200-8116-und-26100-8116-vorschau-7c9e2275-b9ba-4068-aeb0-23da42b81d3b" \
             > page_raw.html
-          # Strip HTML tags to plain text
           sed 's/<[^>]*>//g' page_raw.html | sed '/^[[:space:]]*$/d' > page_content.txt
           echo "Page content fetched ($(wc -l < page_content.txt) lines)"
 
       - name: Run Copilot CLI
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PAGE_CONTENT: ${{ env.PAGE_CONTENT }}
         run: |
-          PAGE_CONTENT=$(cat page_content.txt)
-          COPILOT_RESPONSE=$(copilot --model claude-sonnet-4.6 -p "Du bist ein Spezialist im Releasemanagement und sollst folgenden Webseiteninhalt von Microsoft analysieren, welche neuen Releasenotes ein neuer Patch besitzt. Dabei sollen die Abschnitte Schrittweiser Rollout und Normaler Rollout durch gegangen werden. Die Releasenotes sollst du in eine CSV speichern. Dabei sollst du die Spalten Einsatz (Monat), Einsatz, Rollout, KB-Nummer, Betriebssystembuild, Titel, Beschreibung befüllen. Gib die Ausgabe ausschliesslich als CSV-Inhalt zurueck, ohne zusaetzliche Erklaerungen.
-
-Webseiteninhalt:
-$PAGE_CONTENT")
+          export PAGE_CONTENT=$(cat page_content.txt)
+          COPILOT_RESPONSE=$(copilot --model claude-sonnet-4.6 -p "Du bist ein Spezialist im Releasemanagement und sollst folgenden Webseiteninhalt von Microsoft analysieren, welche neuen Releasenotes ein neuer Patch besitzt. Dabei sollen die Abschnitte Schrittweiser Rollout und Normaler Rollout durch gegangen werden. Die Releasenotes sollst du in eine CSV speichern. Dabei sollst du die Spalten Einsatz (Monat), Einsatz, Rollout, KB-Nummer, Betriebssystembuild, Titel, Beschreibung befuellen. Gib die Ausgabe ausschliesslich als CSV-Inhalt zurueck, ohne zusaetzliche Erklaerungen. Webseiteninhalt: $PAGE_CONTENT")
           echo "COPILOT_RESPONSE<<EOF" >> $GITHUB_ENV
           echo "$COPILOT_RESPONSE" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
