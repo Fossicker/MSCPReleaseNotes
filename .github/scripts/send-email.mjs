@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 
 (async () => {
   const copilotResponse = process.env.COPILOT_RESPONSE || '(keine Antwort erhalten)';
-  const email = 'david.goldmann@drv-bund.de';
+  const email = 'david.goldmann@drv-bund.de, ulrich.dettbarn@drv-bund.de';
 
   const attachments = [];
   if (fs.existsSync('releasenotes.csv')) {
