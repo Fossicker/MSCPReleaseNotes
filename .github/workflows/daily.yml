@@ -55,7 +55,8 @@ jobs:
           echo "COPILOT_RESPONSE<<EOF" >> $GITHUB_ENV
           echo "$COPILOT_RESPONSE" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-          printf '%s' "$COPILOT_RESPONSE" | iconv -t UTF-8 > releasenotes.csv
+          printf '\xef\xbb\xbf' > releasenotes.csv
+          printf '%s' "$COPILOT_RESPONSE" >> releasenotes.csv
 
       - name: Send Email
         run: node .github/scripts/send-email.mjs
