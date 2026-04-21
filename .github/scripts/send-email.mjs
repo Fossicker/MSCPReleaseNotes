@@ -21,8 +21,9 @@ const transporter = nodemailer.createTransport({
   if (fs.existsSync('releasenotes.csv')) {
     attachments.push({
       filename: 'releasenotes.csv',
-      path: 'releasenotes.csv',
-      contentType: 'text/csv',
+      content: fs.readFileSync('releasenotes.csv', 'utf-8'),
+      contentType: 'text/csv; charset=utf-8',
+      encoding: 'utf-8',
     });
   }
 
@@ -31,7 +32,7 @@ const transporter = nodemailer.createTransport({
       from: '"Daily Summary | Copilot" <davidgoldmann2@gmail.com>',
       to: email,
       subject: 'Daily Copilot Summary – Releasenotes',
-      html: `<p>Die generierten Releasenotes sind als CSV-Datei angehängt.</p>`,
+      html: `<meta charset="utf-8"><p>Die generierten Releasenotes sind als CSV-Datei angehängt.</p>`,
       attachments,
     });
   } catch (error) {
