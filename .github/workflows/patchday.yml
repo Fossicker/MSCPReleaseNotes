@@ -66,19 +66,23 @@ jobs:
         run: |
           export LANG=en_US.UTF-8
           export LC_ALL=en_US.UTF-8
-          WIN11_CONTENT=$(cat win11_content.txt)
-          EDGE_CONTENT=$(cat edge_content.txt)
-          WEBVIEW2_CONTENT=$(cat webview2_content.txt)
-          COPILOT_RESPONSE=$(copilot --model claude-sonnet-4.6 -p "Du bist Releasemanager. Analysiere mir die Auswirkungen des aktuellen Patchdays von Microsoft. Betrachte dabei den Windows 11 24H2 Client, Microsoft Edge und die WebView2-Runtime. Der Fokus soll auf Änderungen am System und existierenden Fehlern gelegt werden.
 
-          === Windows 11 24H2 Update-Verlauf ===
-          ${WIN11_CONTENT}
+          # Build the prompt as a file to avoid "Argument list too long"
+          cat > prompt.txt << 'PROMPT_EOF'
+          Du bist Releasemanager. Analysiere mir die Auswirkungen des aktuellen Patchdays von Microsoft. Betrachte dabei den Windows 11 24H2 Client, Microsoft Edge und die WebView2-Runtime. Der Fokus soll auf Änderungen am System und existierenden Fehlern gelegt werden.
+          PROMPT_EOF
 
-          === Microsoft Edge Stable Channel Release Notes ===
-          ${EDGE_CONTENT}
+          echo "" >> prompt.txt
+          echo "=== Windows 11 24H2 Update-Verlauf ===" >> prompt.txt
+          head -n 300 win11_content.txt >> prompt.txt
+          echo "" >> prompt.txt
+          echo "=== Microsoft Edge Stable Channel Release Notes ===" >> prompt.txt
+          head -n 300 edge_content.txt >> prompt.txt
+          echo "" >> prompt.txt
+          echo "=== WebView2 Runtime Release Notes ===" >> prompt.txt
+          head -n 300 webview2_content.txt >> prompt.txt
 
-          === WebView2 Runtime Release Notes ===
-          ${WEBVIEW2_CONTENT}")
+          COPILOT_RESPONSE=$(copilot --model claude-sonnet-4.6 -p "$(cat prompt.txt)")
           echo "COPILOT_RESPONSE<<EOF" >> $GITHUB_ENV
           echo "$COPILOT_RESPONSE" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
