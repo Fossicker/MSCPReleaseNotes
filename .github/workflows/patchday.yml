@@ -1,0 +1,87 @@
+name: Patchday Analysis
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+
+jobs:
+  patchday-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Fetch Windows 11 24H2 Release Notes
+        run: |
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept-Language: de-DE,de;q=0.9" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            --max-time 30 \
+            "https://support.microsoft.com/de-de/windows/windows-11-version-24h2-update-history-0929c747-1815-4543-8461-0160d96f0213" \
+            > win11_raw.html
+          sed 's/<[^>]*>//g' win11_raw.html | sed '/^[[:space:]]*$/d' > win11_content.txt
+
+      - name: Fetch Microsoft Edge Release Notes
+        run: |
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept-Language: de-DE,de;q=0.9" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            --max-time 30 \
+            "https://learn.microsoft.com/de-de/deployedge/microsoft-edge-relnote-stable-channel" \
+            > edge_raw.html
+          sed 's/<[^>]*>//g' edge_raw.html | sed '/^[[:space:]]*$/d' > edge_content.txt
+
+      - name: Fetch WebView2 Runtime Release Notes
+        run: |
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept-Language: de-DE,de;q=0.9" \
+            -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+            --max-time 30 \
+            "https://learn.microsoft.com/de-de/microsoft-edge/webview2/release-notes/archive?tabs=win32cpp" \
+            > webview2_raw.html
+          sed 's/<[^>]*>//g' webview2_raw.html | sed '/^[[:space:]]*$/d' > webview2_content.txt
+
+      - name: Run Copilot CLI
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          export LANG=en_US.UTF-8
+          export LC_ALL=en_US.UTF-8
+          WIN11_CONTENT=$(cat win11_content.txt)
+          EDGE_CONTENT=$(cat edge_content.txt)
+          WEBVIEW2_CONTENT=$(cat webview2_content.txt)
+          COPILOT_RESPONSE=$(copilot --model claude-sonnet-4.6 -p "Du bist Releasemanager. Analysiere mir die Auswirkungen des aktuellen Patchdays von Microsoft. Betrachte dabei den Windows 11 24H2 Client, Microsoft Edge und die WebView2-Runtime. Der Fokus soll auf Änderungen am System und existierenden Fehlern gelegt werden.
+
+          === Windows 11 24H2 Update-Verlauf ===
+          ${WIN11_CONTENT}
+
+          === Microsoft Edge Stable Channel Release Notes ===
+          ${EDGE_CONTENT}
+
+          === WebView2 Runtime Release Notes ===
+          ${WEBVIEW2_CONTENT}")
+          echo "COPILOT_RESPONSE<<EOF" >> $GITHUB_ENV
+          echo "$COPILOT_RESPONSE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Email
+        run: node .github/scripts/send-patchday-email.mjs
